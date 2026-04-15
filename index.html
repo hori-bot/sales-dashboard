@@ -307,14 +307,14 @@ const dashboardData = {
       "target": 5300000,
       "actual": 0,
       "rate": 0
-    },
-    {
-      "name": "A&Bランク（70社）商標合計",
-      "target": 376767706,
-      "actual": 93211263,
-      "rate": 24.7
     }
   ],
+  "ab_trademark": {
+    "name": "A&Bランク（70社）商標合計",
+    "target": 376767706,
+    "actual": 93211263,
+    "rate": 24.7
+  },
   "title3b": "３-b．アカプラTop20 進捗実績（ドメイン計）",
   "accounts_domain": [
     {
@@ -438,6 +438,12 @@ const dashboardData = {
       "rate": 0
     }
   ],
+  "ab_domain": {
+    "name": "A&Bランク（75社）ドメイン合計",
+    "target": 348592485,
+    "actual": 106696193,
+    "rate": 30.6
+  },
   "accounts_updated": "2026-04-15 08:10",
   "ab_summary": {
     "name": "A&Bランク（90社）合計",
@@ -448,7 +454,7 @@ const dashboardData = {
   "std_progress": 29.4,
   "working_days_elapsed": 69,
   "working_days_total": 235,
-  "updated_at": "2026-04-15 10:03",
+  "updated_at": "2026-04-15 10:43",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -1353,7 +1359,9 @@ const dashboardData = {
         <div class="section-divider"></div>
         <h2 id="accountTrademarkTitle" class="section-title"></h2>
         <div class="section-unit">単位：千円</div>
+        <div id="stdProgressBanner3a" class="account-summary" style="border-left-color:#95a5a6;"></div>
         <div id="accountTrademarkSummary" class="account-summary"></div>
+        <div id="abTrademarkSummary" class="account-summary" style="border-left-color:#8e6bbf;"></div>
         <div class="chart-container" id="accountTrademarkChartContainer" style="height: 900px;">
             <canvas id="accountTrademarkChart"></canvas>
         </div>
@@ -1362,7 +1370,9 @@ const dashboardData = {
         <div class="section-divider"></div>
         <h2 id="accountDomainTitle" class="section-title"></h2>
         <div class="section-unit">単位：千円</div>
+        <div id="stdProgressBanner3b" class="account-summary" style="border-left-color:#95a5a6;"></div>
         <div id="accountDomainSummary" class="account-summary"></div>
+        <div id="abDomainSummary" class="account-summary" style="border-left-color:#8e6bbf;"></div>
         <div class="chart-container" id="accountDomainChartContainer" style="height: 900px;">
             <canvas id="accountDomainChart"></canvas>
         </div>
@@ -2165,6 +2175,41 @@ const dashboardData = {
             `;
         }
 
+        // 標準進捗バナーを任意の要素IDに描画（3-a/3-b共用）
+        function fillStdProgressBanner(elId, std, workingElapsed, workingTotal) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const today = new Date();
+            const m   = today.getMonth() + 1;
+            const d   = today.getDate();
+            const pct = Math.min(std, 100).toFixed(1);
+            el.innerHTML = `
+                <span class="summary-label">標準進捗</span>
+                <span class="summary-numbers">${m}月${d}日　${workingElapsed}労働日 / ${workingTotal}労働日</span>
+                <span class="summary-rate" style="color:#555">${std}%</span>
+                <div class="summary-bar-wrap">
+                    <div class="summary-bar-fill" style="width:${pct}%;background:#95a5a6"></div>
+                </div>
+            `;
+        }
+
+        // A&Bランク合計カードを任意の要素IDに描画
+        function fillAbSummaryCard(elId, ab, std) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!ab || !ab.name) { el.style.display = 'none'; return; }
+            const color  = rateColorVsStd(ab.rate, std);
+            const barPct = Math.min(ab.rate, 100).toFixed(1);
+            el.innerHTML = `
+                <span class="summary-label">${ab.name}</span>
+                <span class="summary-numbers">実績 ${(ab.actual/1000000).toFixed(1)}M / 目標 ${(ab.target/1000000).toFixed(1)}M</span>
+                <span class="summary-rate" style="color:${color}">${ab.rate.toFixed(1)}%</span>
+                <div class="summary-bar-wrap">
+                    <div class="summary-bar-fill" style="width:${barPct}%;background:${color}"></div>
+                </div>
+            `;
+        }
+
         // 第3チャート：アカプラTop20 横棒グラフ（目標・実績の2バー、金額ベース）
         function drawAccountChart(accounts, stdProgress) {
             const ctx = document.getElementById('accountChart').getContext('2d');
@@ -2312,7 +2357,7 @@ const dashboardData = {
             const summaryColor = rateColorVsStd(totalRate, std);
             const barPct = Math.min(totalRate, 100).toFixed(1);
             summaryEl.innerHTML = `
-                <span class="summary-label">合計</span>
+                <span class="summary-label">Top20社合計</span>
                 <span class="summary-numbers">実績 ${(totalActual/1000000).toFixed(1)}M / 目標 ${(totalTarget/1000000).toFixed(1)}M</span>
                 <span class="summary-rate" style="color:${summaryColor}">${totalRate.toFixed(1)}%</span>
                 <div class="summary-bar-wrap">
@@ -2757,14 +2802,22 @@ const dashboardData = {
             if (data.accounts_trademark && data.accounts_trademark.length > 0) {
                 if (data.title3a) document.getElementById('accountTrademarkTitle').textContent = data.title3a;
                 const std = data.std_progress || 0;
+                const we  = data.working_days_elapsed || 0;
+                const wt  = data.working_days_total   || 0;
+                fillStdProgressBanner('stdProgressBanner3a', std, we, wt);
                 drawSubAccountChart('accountTrademarkChart', 'accountTrademarkSummary', data.accounts_trademark, std);
+                fillAbSummaryCard('abTrademarkSummary', data.ab_trademark, std);
             }
 
             // 第3-bチャート：アカプラTop20 ドメイン計
             if (data.accounts_domain && data.accounts_domain.length > 0) {
                 if (data.title3b) document.getElementById('accountDomainTitle').textContent = data.title3b;
                 const std = data.std_progress || 0;
+                const we  = data.working_days_elapsed || 0;
+                const wt  = data.working_days_total   || 0;
+                fillStdProgressBanner('stdProgressBanner3b', std, we, wt);
                 drawSubAccountChart('accountDomainChart', 'accountDomainSummary', data.accounts_domain, std);
+                fillAbSummaryCard('abDomainSummary', data.ab_domain, std);
             }
 
             // 第4チャート：四半期 受注粗利
