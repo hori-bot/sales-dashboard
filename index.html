@@ -454,7 +454,7 @@ const dashboardData = {
   "std_progress": 29.4,
   "working_days_elapsed": 69,
   "working_days_total": 235,
-  "updated_at": "2026-04-15 10:43",
+  "updated_at": "2026-04-15 11:01",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -2346,7 +2346,7 @@ const dashboardData = {
         }
 
         // 第3-a/3-b共通：アカプラ系横棒グラフ描画
-        function drawSubAccountChart(canvasId, summaryId, accounts, std) {
+        function drawSubAccountChart(canvasId, summaryId, accounts, std, summaryLabel) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             const items = [...accounts].sort((a, b) => b.target - a.target);
 
@@ -2356,8 +2356,9 @@ const dashboardData = {
             const summaryEl   = document.getElementById(summaryId);
             const summaryColor = rateColorVsStd(totalRate, std);
             const barPct = Math.min(totalRate, 100).toFixed(1);
+            const label = summaryLabel || 'Top20社合計';
             summaryEl.innerHTML = `
-                <span class="summary-label">Top20社合計</span>
+                <span class="summary-label">${label}</span>
                 <span class="summary-numbers">実績 ${(totalActual/1000000).toFixed(1)}M / 目標 ${(totalTarget/1000000).toFixed(1)}M</span>
                 <span class="summary-rate" style="color:${summaryColor}">${totalRate.toFixed(1)}%</span>
                 <div class="summary-bar-wrap">
@@ -2805,7 +2806,7 @@ const dashboardData = {
                 const we  = data.working_days_elapsed || 0;
                 const wt  = data.working_days_total   || 0;
                 fillStdProgressBanner('stdProgressBanner3a', std, we, wt);
-                drawSubAccountChart('accountTrademarkChart', 'accountTrademarkSummary', data.accounts_trademark, std);
+                drawSubAccountChart('accountTrademarkChart', 'accountTrademarkSummary', data.accounts_trademark, std, 'Top20社 商標合計');
                 fillAbSummaryCard('abTrademarkSummary', data.ab_trademark, std);
             }
 
@@ -2816,7 +2817,7 @@ const dashboardData = {
                 const we  = data.working_days_elapsed || 0;
                 const wt  = data.working_days_total   || 0;
                 fillStdProgressBanner('stdProgressBanner3b', std, we, wt);
-                drawSubAccountChart('accountDomainChart', 'accountDomainSummary', data.accounts_domain, std);
+                drawSubAccountChart('accountDomainChart', 'accountDomainSummary', data.accounts_domain, std, 'Top20社 ドメイン合計');
                 fillAbSummaryCard('abDomainSummary', data.ab_domain, std);
             }
 
