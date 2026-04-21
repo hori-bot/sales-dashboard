@@ -454,7 +454,7 @@ const dashboardData = {
   "std_progress": 31.1,
   "working_days_elapsed": 73,
   "working_days_total": 235,
-  "updated_at": "2026-04-21 09:59",
+  "updated_at": "2026-04-21 17:21",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -1934,20 +1934,36 @@ const dashboardData = {
                                         ctx.fillText(Math.round(bVal), forecastBarX, bYPos);
                                     }
                                     
-                                    // 見込の合計値（上部に表示）
-                                    ctx.fillStyle = '#2c3e50';
-                                    ctx.font = 'bold 15px Arial';
+                                    // 見込の合計値＋達成率（上部に表示）
                                     const total = actualVal + wVal + cVal + bVal;
                                     if (total > 0) {
                                         const yPos = yScale.getPixelForValue(total);
-                                        ctx.fillText(Math.round(total), forecastBarX, yPos - 8);
+                                        ctx.fillStyle = '#2c3e50';
+                                        ctx.font = 'bold 15px Arial';
+                                        ctx.fillText(Math.round(total), forecastBarX, yPos - 22);
+                                        if (targetVal > 0) {
+                                            const rate = Math.round(total / targetVal * 100);
+                                            const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                            ctx.font = 'bold 13px Arial';
+                                            ctx.fillStyle = rateColor;
+                                            ctx.fillText(rate + '%', forecastBarX, yPos - 6);
+                                        }
                                     }
                                 } else if (isActual) {
-                                    // 実績の合計値（上部に表示）
-                                    ctx.fillStyle = '#2c3e50';
-                                    ctx.font = 'bold 15px Arial';
-                                    const yPos = yScale.getPixelForValue(actualVal);
-                                    ctx.fillText(Math.round(actualVal), forecastBarX, yPos - 8);
+                                    // 実績の合計値＋達成率（上部に表示）
+                                    if (actualVal > 0) {
+                                        const yPos = yScale.getPixelForValue(actualVal);
+                                        ctx.fillStyle = '#2c3e50';
+                                        ctx.font = 'bold 15px Arial';
+                                        ctx.fillText(Math.round(actualVal), forecastBarX, yPos - 22);
+                                        if (targetVal > 0) {
+                                            const rate = Math.round(actualVal / targetVal * 100);
+                                            const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                            ctx.font = 'bold 13px Arial';
+                                            ctx.fillStyle = rateColor;
+                                            ctx.fillText(rate + '%', forecastBarX, yPos - 6);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -2058,10 +2074,21 @@ const dashboardData = {
                             chart.getDatasetMeta(0).data.forEach((bar, i) => {
                                 const val = values[i];
                                 ctx.save();
-                                ctx.fillStyle = '#2c3e50';
-                                ctx.font = 'bold 13px Arial';
                                 ctx.textAlign = 'center';
-                                ctx.fillText(`${val.toFixed(1)}M`, bar.x, y.getPixelForValue(val) - 8);
+                                if (targetM > 0 && val > 0) {
+                                    const rate = Math.round(val / targetM * 100);
+                                    const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                    ctx.fillStyle = '#2c3e50';
+                                    ctx.font = 'bold 13px Arial';
+                                    ctx.fillText(`${val.toFixed(1)}M`, bar.x, y.getPixelForValue(val) - 20);
+                                    ctx.font = 'bold 13px Arial';
+                                    ctx.fillStyle = rateColor;
+                                    ctx.fillText(rate + '%', bar.x, y.getPixelForValue(val) - 6);
+                                } else {
+                                    ctx.fillStyle = '#2c3e50';
+                                    ctx.font = 'bold 13px Arial';
+                                    ctx.fillText(`${val.toFixed(1)}M`, bar.x, y.getPixelForValue(val) - 8);
+                                }
                                 ctx.restore();
                             });
                         }
@@ -2616,10 +2643,21 @@ const dashboardData = {
                             if (fCommit > 0)  c.fillText(Math.round(fCommit),  bx, y.getPixelForValue(fActual + fWorst + fCommit / 2));
                             if (fBest > 0)    c.fillText(Math.round(fBest),    bx, y.getPixelForValue(fActual + fWorst + fCommit + fBest / 2));
                             const fTotal = fActual + fWorst + fCommit + fBest;
-                            if (fTotal > 0)   c.fillText(Math.round(fTotal),   bx, y.getPixelForValue(fTotal) - 10);
+                            if (fTotal > 0) {
+                                c.fillText(Math.round(fTotal), bx, y.getPixelForValue(fTotal) - 24);
+                                if (target > 0) {
+                                    const rate = Math.round(fTotal / target * 100);
+                                    const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                    c.font = 'bold 13px Arial';
+                                    c.fillStyle = rateColor;
+                                    c.fillText(rate + '%', bx, y.getPixelForValue(fTotal) - 10);
+                                    c.font = 'bold 15px Arial';
+                                    c.fillStyle = '#2c3e50';
+                                }
+                            }
                         }
 
-                        // 見込ロジックバー：各セグメント内ラベル＋合計
+                        // 見込ロジックバー：各セグメント内ラベル＋合計＋達成率
                         const lLabelIdx = hasPrevQ ? 4 : 2;
                         const lBar = chart.getDatasetMeta(lBarIdx).data[lLabelIdx];
                         if (lBar) {
@@ -2629,7 +2667,18 @@ const dashboardData = {
                             if (lC > 0)       c.fillText(Math.round(lC),       bx, y.getPixelForValue(lActual + lW + lC / 2));
                             if (lB > 0)       c.fillText(Math.round(lB),       bx, y.getPixelForValue(lActual + lW + lC + lB / 2));
                             const lTotal = lActual + lW + lC + lB;
-                            if (lTotal > 0)   c.fillText(Math.round(lTotal),   bx, y.getPixelForValue(lTotal) - 10);
+                            if (lTotal > 0) {
+                                c.fillText(Math.round(lTotal), bx, y.getPixelForValue(lTotal) - 24);
+                                if (target > 0) {
+                                    const rate = Math.round(lTotal / target * 100);
+                                    const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                    c.font = 'bold 13px Arial';
+                                    c.fillStyle = rateColor;
+                                    c.fillText(rate + '%', bx, y.getPixelForValue(lTotal) - 10);
+                                    c.font = 'bold 15px Arial';
+                                    c.fillStyle = '#2c3e50';
+                                }
+                            }
                         }
                     }
                 }]
@@ -2990,13 +3039,24 @@ const dashboardData = {
                                         c.fillText(rate + '%', aBar.x, y.getPixelForValue(aVal) - 6);
                                     }
                                 }
-                                // 見込値（上部）
+                                // 見込値＋達成率（上部）
                                 if (fVal && fVal > 0) {
                                     const fBar = forecastMeta.data[i];
                                     if (fBar) {
-                                        c.fillStyle = '#2c3e50';
-                                        c.font = 'bold 13px Arial';
-                                        c.fillText(Math.round(fVal), fBar.x, y.getPixelForValue(fVal) - 6);
+                                        if (tVal > 0) {
+                                            const rate = Math.round(fVal / tVal * 100);
+                                            const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                            c.font = 'bold 12px Arial';
+                                            c.fillStyle = '#2c3e50';
+                                            c.fillText(Math.round(fVal), fBar.x, y.getPixelForValue(fVal) - 20);
+                                            c.font = 'bold 13px Arial';
+                                            c.fillStyle = rateColor;
+                                            c.fillText(rate + '%', fBar.x, y.getPixelForValue(fVal) - 6);
+                                        } else {
+                                            c.fillStyle = '#2c3e50';
+                                            c.font = 'bold 13px Arial';
+                                            c.fillText(Math.round(fVal), fBar.x, y.getPixelForValue(fVal) - 6);
+                                        }
                                     }
                                 }
                                 c.restore();
