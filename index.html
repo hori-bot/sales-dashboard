@@ -454,7 +454,7 @@ const dashboardData = {
   "std_progress": 31.1,
   "working_days_elapsed": 73,
   "working_days_total": 235,
-  "updated_at": "2026-04-21 17:21",
+  "updated_at": "2026-04-21 17:27",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -2569,7 +2569,7 @@ const dashboardData = {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 35, bottom: 10 } },
+                    layout: { padding: { top: 60, bottom: 10 } },
                     plugins: {
                         legend: {
                             display: true,
@@ -2622,7 +2622,19 @@ const dashboardData = {
                             }
                             const pBar = chart.getDatasetMeta(1).data[1];
                             if (pBar && pActual > 0) {
-                                c.fillText(Math.round(pActual), pBar.x, y.getPixelForValue(pActual) - 10);
+                                const pYPos = y.getPixelForValue(pActual);
+                                c.fillStyle = '#2c3e50';
+                                c.font = 'bold 15px Arial';
+                                c.fillText(Math.round(pActual), pBar.x, pYPos - 24);
+                                if (pTarget > 0) {
+                                    const pRate = Math.round(pActual / pTarget * 100);
+                                    const pRateColor = pRate >= 100 ? '#27ae60' : (pRate >= 70 ? '#f39c12' : '#e74c3c');
+                                    c.font = 'bold 13px Arial';
+                                    c.fillStyle = pRateColor;
+                                    c.fillText(pRate + '%', pBar.x, pYPos - 10);
+                                    c.font = 'bold 15px Arial';
+                                    c.fillStyle = '#2c3e50';
+                                }
                             }
                         }
 
@@ -2993,7 +3005,7 @@ const dashboardData = {
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 40 } },
+                        layout: { padding: { top: 55 } },
                         plugins: {
                             legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 12, weight: '600' } } },
                             tooltip: { callbacks: { label: c => c.parsed.y !== null && c.parsed.y !== 0 ? `${c.dataset.label}: ${c.parsed.y.toFixed(isYen ? 1 : 0)}${tooltipUnit}` : '' } }
@@ -3006,10 +3018,12 @@ const dashboardData = {
                     plugins: [{
                         id: 'simpleLabelPlugin_' + canvasId,
                         afterDatasetsDraw(chart) {
-                            const { ctx: c, scales: { y } } = chart;
+                            const { ctx: c, scales: { y }, chartArea } = chart;
                             const targetMeta = chart.getDatasetMeta(0);
                             const actualMeta = chart.getDatasetMeta(1);
                             const forecastMeta = chart.getDatasetMeta(2);
+                            // チャートエリア上端より上にラベルが出ないようにするクランプ
+                            const clampY = (yPos, lines) => Math.max(yPos, chartArea.top + 14 * lines);
                             for (let i = 0; i < labels.length; i++) {
                                 const tVal = targetData[i];
                                 const aVal = actualData[i];
@@ -3022,7 +3036,7 @@ const dashboardData = {
                                     if (tBar) {
                                         c.fillStyle = '#2c3e50';
                                         c.font = 'bold 13px Arial';
-                                        c.fillText(Math.round(tVal), tBar.x, y.getPixelForValue(tVal) - 6);
+                                        c.fillText(Math.round(tVal), tBar.x, clampY(y.getPixelForValue(tVal) - 6, 1));
                                     }
                                 }
                                 // 実績値＋達成率（上部）
@@ -3031,31 +3045,33 @@ const dashboardData = {
                                     if (aBar) {
                                         const rate = tVal > 0 ? Math.round(aVal / tVal * 100) : 0;
                                         const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
+                                        const baseY = y.getPixelForValue(aVal);
                                         c.font = 'bold 12px Arial';
                                         c.fillStyle = '#2c3e50';
-                                        c.fillText(Math.round(aVal), aBar.x, y.getPixelForValue(aVal) - 20);
+                                        c.fillText(Math.round(aVal), aBar.x, clampY(baseY - 20, 2));
                                         c.font = 'bold 13px Arial';
                                         c.fillStyle = rateColor;
-                                        c.fillText(rate + '%', aBar.x, y.getPixelForValue(aVal) - 6);
+                                        c.fillText(rate + '%', aBar.x, clampY(baseY - 6, 1));
                                     }
                                 }
                                 // 見込値＋達成率（上部）
                                 if (fVal && fVal > 0) {
                                     const fBar = forecastMeta.data[i];
                                     if (fBar) {
+                                        const baseY = y.getPixelForValue(fVal);
                                         if (tVal > 0) {
                                             const rate = Math.round(fVal / tVal * 100);
                                             const rateColor = rate >= 100 ? '#27ae60' : (rate >= 70 ? '#f39c12' : '#e74c3c');
                                             c.font = 'bold 12px Arial';
                                             c.fillStyle = '#2c3e50';
-                                            c.fillText(Math.round(fVal), fBar.x, y.getPixelForValue(fVal) - 20);
+                                            c.fillText(Math.round(fVal), fBar.x, clampY(baseY - 20, 2));
                                             c.font = 'bold 13px Arial';
                                             c.fillStyle = rateColor;
-                                            c.fillText(rate + '%', fBar.x, y.getPixelForValue(fVal) - 6);
+                                            c.fillText(rate + '%', fBar.x, clampY(baseY - 6, 1));
                                         } else {
                                             c.fillStyle = '#2c3e50';
                                             c.font = 'bold 13px Arial';
-                                            c.fillText(Math.round(fVal), fBar.x, y.getPixelForValue(fVal) - 6);
+                                            c.fillText(Math.round(fVal), fBar.x, clampY(baseY - 6, 1));
                                         }
                                     }
                                 }
