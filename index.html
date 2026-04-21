@@ -454,7 +454,7 @@ const dashboardData = {
   "std_progress": 31.1,
   "working_days_elapsed": 73,
   "working_days_total": 235,
-  "updated_at": "2026-04-21 17:38",
+  "updated_at": "2026-04-21 17:42",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -1786,7 +1786,18 @@ const dashboardData = {
             
             const chartData = createChartData(data);
             console.log('グラフデータ:', chartData);
-            
+
+            // Y軸上限を計算（ラベルが凡例と重ならないよう35%マージン）
+            const _yMaxVals = (data.labels || []).map((_, i) => {
+                const t = formatMillion(data.targets[i] || 0);
+                const a = formatMillion(data.actuals[i] || 0);
+                const w = formatMillion((data.w_forecasts || [])[i] || 0);
+                const c = formatMillion((data.c_forecasts || [])[i] || 0);
+                const b = formatMillion((data.b_forecasts || [])[i] || 0);
+                return Math.max(t, a + w + c + b);
+            });
+            const _yMax = (Math.max(..._yMaxVals, 1)) * 1.35;
+
             try {
                 const chartInstance = new Chart(ctx, {
                     type: 'bar',
@@ -1795,6 +1806,7 @@ const dashboardData = {
                         responsive: true,
                         maintainAspectRatio: false,
                         indexAxis: 'x',
+                        layout: { padding: { top: 55 } },
                         plugins: {
                             legend: {
                                 display: true,
@@ -1837,6 +1849,7 @@ const dashboardData = {
                             y: {
                                 stacked: true,
                                 beginAtZero: true,
+                                max: _yMax,
                                 ticks: {
                                     callback: function(value) {
                                         return value.toLocaleString(undefined, {maximumFractionDigits: 0});
@@ -1863,7 +1876,10 @@ const dashboardData = {
                             const yScale = chart.scales.y;
                             const targetMeta = chart.getDatasetMeta(0); // 目標
                             const forecastMeta = chart.getDatasetMeta(1); // 実績
-                            
+                            const chartArea = chart.chartArea;
+                            // チャートエリア上端より上にラベルが出ないようにするクランプ
+                            const clampY = (yPos, lines) => Math.max(yPos, chartArea.top + 14 * lines);
+
                             // 各月のループ
                             for (let i = 0; i < chart.data.labels.length; i++) {
                                 const label = chart.data.labels[i];
@@ -1896,7 +1912,7 @@ const dashboardData = {
                                     ctx.fillStyle = '#2c3e50';
                                     ctx.font = 'bold 15px Arial';
                                     const yPos = yScale.getPixelForValue(targetVal);
-                                    ctx.fillText(Math.round(targetVal), targetBarX, yPos - 8);
+                                    ctx.fillText(Math.round(targetVal), targetBarX, clampY(yPos - 8, 1));
                                 }
                                 
                                 // ===== 各セグメントの値をセグメント内に表示 =====
