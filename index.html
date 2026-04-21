@@ -454,7 +454,7 @@ const dashboardData = {
   "std_progress": 31.1,
   "working_days_elapsed": 73,
   "working_days_total": 235,
-  "updated_at": "2026-04-21 17:42",
+  "updated_at": "2026-04-21 17:46",
   "labels": [
     "1月 実績",
     "2月 実績",
@@ -1796,7 +1796,7 @@ const dashboardData = {
                 const b = formatMillion((data.b_forecasts || [])[i] || 0);
                 return Math.max(t, a + w + c + b);
             });
-            const _yMax = (Math.max(..._yMaxVals, 1)) * 1.35;
+            const _yMax = (Math.max(..._yMaxVals, 1)) * 1.3;
 
             try {
                 const chartInstance = new Chart(ctx, {
@@ -2615,7 +2615,7 @@ const dashboardData = {
                             beginAtZero: true,
                             max: Math.max(pTarget, pActual, target,
                                 fActual + fWorst + fCommit + fBest,
-                                lActual + lW + lC + lB) * 1.35,
+                                lActual + lW + lC + lB) * 1.3,
                             ticks: {
                                 callback: v => v.toLocaleString(undefined, { maximumFractionDigits: 0 }),
                                 font: { size: 11 }
@@ -2997,7 +2997,7 @@ const dashboardData = {
                 const yAxisLabel = isYen ? '百万円' : '';
                 const tooltipUnit = isYen ? '百万円' : '';
                 // ラベルが凡例と重ならないようY軸上限に35%の余白を確保
-                const yAxisMax = toDisp(maxVal) * 1.35;
+                const yAxisMax = toDisp(maxVal) * 1.3;
 
                 const targetData = [], actualData = [], forecastData = [];
                 for (let i = 0; i < labels.length; i++) {
